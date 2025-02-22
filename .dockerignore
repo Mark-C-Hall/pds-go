@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Docker
+.docker
+docker-compose*.yml
+compose*.yaml
+.dockerignore
+
+# IDE directories
+.vscode
+.idea
+
+# Binaries and build artifacts
+pds
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test files
+*.test
+*.out
+coverage.txt
+
+# Go workspace file
+go.work
+
+# Temporary files
+tmp/
+*.tmp
