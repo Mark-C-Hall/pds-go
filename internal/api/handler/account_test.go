@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/mark-c-hall/pds-go/internal/api/httputil"
 )
 
 func TestHandleCreateAccount(t *testing.T) {
@@ -17,8 +19,7 @@ func TestHandleCreateAccount(t *testing.T) {
 		expectedError  string
 	}{
 		{
-			name:   "valid request",
-			method: http.MethodPost,
+			name: "valid request",
 			requestBody: CreateAccountRequest{
 				Handle:   "test.bsky.social",
 				Email:    "test@example.com",
@@ -27,26 +28,7 @@ func TestHandleCreateAccount(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
-			name:   "wrong HTTP method",
-			method: http.MethodGet,
-			requestBody: CreateAccountRequest{
-				Handle: "test.bsky.social",
-			},
-			expectedStatus: http.StatusBadRequest,
-			expectedError:  "Method Not Supported",
-		},
-		{
-			name:   "missing content-type header",
-			method: http.MethodPost,
-			requestBody: CreateAccountRequest{
-				Handle: "test.bsky.social",
-			},
-			expectedStatus: http.StatusBadRequest,
-			expectedError:  "Content-Type must be application/json",
-		},
-		{
-			name:   "missing handle",
-			method: http.MethodPost,
+			name: "missing handle",
 			requestBody: CreateAccountRequest{
 				Email:    "test@example.com",
 				Password: "strongpassword123",
@@ -55,8 +37,7 @@ func TestHandleCreateAccount(t *testing.T) {
 			expectedError:  "Handle is required",
 		},
 		{
-			name:   "missing password",
-			method: http.MethodPost,
+			name: "missing password",
 			requestBody: CreateAccountRequest{
 				Handle: "test.bsky.social",
 				Email:  "test@example.com",
@@ -65,8 +46,7 @@ func TestHandleCreateAccount(t *testing.T) {
 			expectedError:  "Password is required",
 		},
 		{
-			name:   "missing email",
-			method: http.MethodPost,
+			name: "missing email",
 			requestBody: CreateAccountRequest{
 				Handle:   "test.bsky.social",
 				Password: "strongpassword123",
@@ -78,24 +58,7 @@ func TestHandleCreateAccount(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Create body
-			var body bytes.Buffer
-			if str, ok := tt.requestBody.(string); ok {
-				body.WriteString(str)
-			} else {
-				json.NewEncoder(&body).Encode(tt.requestBody)
-			}
-
-			// Create test request
-			req := httptest.NewRequest(tt.method, "/xrpc/com.atproto.server.createAccount", &body)
-
-			// Only set Content-Type for test cases that should have it
-			if tt.name != "missing content-type header" {
-				req.Header.Set("Content-Type", "application/json")
-			}
-
-			// Create response recorder
-			rec := httptest.NewRecorder()
+			rec, req := setupTestRequest(http.MethodPost, "/xrpc/com.atproto.server.createAccount", tt.requestBody)
 
 			// Call handler
 			HandleCreateAccount(rec, req)
@@ -107,7 +70,7 @@ func TestHandleCreateAccount(t *testing.T) {
 
 			// Verify error message if applicable
 			if tt.expectedError != "" {
-				var errorResp ErrorResponse
+				var errorResp httputil.ErrorResponse
 				if err := json.NewDecoder(rec.Body).Decode(&errorResp); err != nil {
 					t.Fatalf("Failed to decode error response: %v", err)
 				}
@@ -117,4 +80,23 @@ func TestHandleCreateAccount(t *testing.T) {
 			}
 		})
 	}
+}
+
+func setupTestRequest(method, path string, body interface{}) (*httptest.ResponseRecorder, *http.Request) {
+	// Create body
+	var bodyBuffer bytes.Buffer
+	if str, ok := body.(string); ok {
+		bodyBuffer.WriteString(str)
+	} else {
+		json.NewEncoder(&bodyBuffer).Encode(body)
+	}
+
+	// Create test request
+	req := httptest.NewRequest(http.MethodPost, path, &bodyBuffer)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Create response recorder
+	rec := httptest.NewRecorder()
+
+	return rec, req
 }
