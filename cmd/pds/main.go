@@ -1,16 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"html"
 	"log"
 	"net/http"
+
+	"github.com/mark-c-hall/pds-go/internal/api/router"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q\n", html.EscapeString(r.URL.Path))
-	})
+	router := router.SetupRouter()
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	srv := http.Server{
+		Addr:    ":8080",
+		Handler: router,
+	}
+	log.Fatal(srv.ListenAndServe())
 }
