@@ -9,7 +9,20 @@ import (
 	"github.com/bluesky-social/indigo/atproto/syntax"
 
 	"github.com/mark-c-hall/pds-go/internal/api/httputil"
+	"github.com/mark-c-hall/pds-go/internal/service"
 )
+
+type AccountHandler struct {
+	service service.AccountService
+	logger  *log.Logger
+}
+
+func NewAccountHandler(service service.AccountService, logger *log.Logger) *AccountHandler {
+	return &AccountHandler{
+		service: service,
+		logger:  logger,
+	}
+}
 
 type CreateAccountRequest struct {
 	Email            string        `json:"email"`
@@ -30,9 +43,10 @@ type CreateAccountResponse struct {
 	DIDDoc     identity.DIDDocument `json:"didDoc"`
 }
 
-func HandleCreateAccount(w http.ResponseWriter, r *http.Request) {
+func (h *AccountHandler) HandleCreateAccount(w http.ResponseWriter, r *http.Request) {
 	var req CreateAccountRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil { // TODO: Handle syntax errors
+		h.logger.Printf("Failed to decode request: %v", err)
 		httputil.RespondWithError(w, "InvalidRequest", "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
@@ -52,7 +66,18 @@ func HandleCreateAccount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp := CreateAccountResponse{Handle: req.Handle}
-	log.Printf("Created account for %s\n", req.Handle)
+	account, err := h.service.CreateAccount(r.Context(), req.Handle, req.Email, req.Password)
+	if err != nil {
+		h.logger.Printf("Failed to create account: %v", err)
+		httputil.RespondWithError(w, "InternalError", "Failed to create account", http.StatusInternalServerError)
+		return
+	}
+
+	resp := CreateAccountResponse{
+		DID:    account.DID,
+		Handle: account.Handle,
+	}
+
+	h.logger.Printf("Created account for %s with DID %s", account.Handle, account.DID)
 	httputil.RespondWithJSON(w, &resp, http.StatusOK)
 }

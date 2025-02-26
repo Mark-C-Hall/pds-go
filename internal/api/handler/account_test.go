@@ -3,11 +3,14 @@ package handler
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/mark-c-hall/pds-go/internal/api/httputil"
+	"github.com/mark-c-hall/pds-go/internal/service"
 )
 
 func TestHandleCreateAccount(t *testing.T) {
@@ -60,8 +63,17 @@ func TestHandleCreateAccount(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			rec, req := setupTestRequest(http.MethodPost, "/xrpc/com.atproto.server.createAccount", tt.requestBody)
 
-			// Call handler
-			HandleCreateAccount(rec, req)
+			// Create a mock service
+			mockService := service.NewAccountService()
+
+			// Create a test logger that discards output
+			testLogger := log.New(io.Discard, "", 0)
+
+			// Create the handler with mock dependencies
+			handler := NewAccountHandler(mockService, testLogger)
+
+			// Call the handler method
+			handler.HandleCreateAccount(rec, req)
 
 			// Check status code
 			if rec.Code != tt.expectedStatus {

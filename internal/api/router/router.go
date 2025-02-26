@@ -7,14 +7,14 @@ import (
 	"github.com/mark-c-hall/pds-go/internal/api/middleware"
 )
 
-func SetupRouter() *http.ServeMux {
+func SetupRouter(accountHandler *handler.AccountHandler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	// XRPC Routes
 	mux.HandleFunc("/xrpc/com.atproto.server.createAccount",
 		middleware.RequireJSON(
 			middleware.MethodOnly(http.MethodPost,
-				handler.HandleCreateAccount)))
+				accountHandler.HandleCreateAccount)))
 
 	return mux
 }
