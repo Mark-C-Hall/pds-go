@@ -104,7 +104,7 @@ func setupTestRequest(method, path string, body interface{}) (*httptest.Response
 	}
 
 	// Create test request
-	req := httptest.NewRequest(http.MethodPost, path, &bodyBuffer)
+	req := httptest.NewRequest(method, path, &bodyBuffer)
 	req.Header.Set("Content-Type", "application/json")
 
 	// Create response recorder
