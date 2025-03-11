@@ -2,7 +2,11 @@ module github.com/mark-c-hall/pds-go
 
 go 1.24.0
 
-require github.com/bluesky-social/indigo v0.0.0-20250222003125-2503553ea604
+require (
+	github.com/bluesky-social/indigo v0.0.0-20250222003125-2503553ea604
+	github.com/mattn/go-sqlite3 v1.14.24
+	golang.org/x/crypto v0.36.0
+)
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -16,8 +20,7 @@ require (
 	github.com/prometheus/procfs v0.12.0 // indirect
 	gitlab.com/yawning/secp256k1-voi v0.0.0-20230925100816-f2616030848b // indirect
 	gitlab.com/yawning/tuplehash v0.0.0-20230713102510-df83abbf9a02 // indirect
-	golang.org/x/crypto v0.21.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/sys v0.31.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 )

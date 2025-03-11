@@ -11,13 +11,22 @@ import (
 
 	"github.com/mark-c-hall/pds-go/internal/api/handler"
 	"github.com/mark-c-hall/pds-go/internal/api/router"
+	"github.com/mark-c-hall/pds-go/internal/repository"
 	"github.com/mark-c-hall/pds-go/internal/service"
+	"github.com/mark-c-hall/pds-go/internal/util"
 )
 
 func main() {
 	logger := log.New(os.Stdout, "PDS: ", log.LstdFlags)
 
-	accountService := service.NewAccountService()
+	db, err := repository.SetupDatabase("./pds.db")
+	if err != nil {
+		logger.Fatalf("Failed to setup database: %v", err)
+	}
+
+	accountRepo := repository.NewSQLAccountRepository(db)
+	passwordHasher := util.NewBcryptPasswordHasher()
+	accountService := service.NewAccountService(accountRepo, passwordHasher, logger)
 	accountHandler := handler.NewAccountHandler(accountService, logger)
 
 	router := router.SetupRouter(accountHandler)

@@ -2,15 +2,19 @@ package handler
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
+	"github.com/bluesky-social/indigo/atproto/syntax"
 	"github.com/mark-c-hall/pds-go/internal/api/httputil"
-	"github.com/mark-c-hall/pds-go/internal/service"
+	"github.com/mark-c-hall/pds-go/internal/core/model"
 )
 
 func TestHandleCreateAccount(t *testing.T) {
@@ -64,7 +68,7 @@ func TestHandleCreateAccount(t *testing.T) {
 			rec, req := setupTestRequest(http.MethodPost, "/xrpc/com.atproto.server.createAccount", tt.requestBody)
 
 			// Create a mock service
-			mockService := service.NewAccountService()
+			mockService := &MockAccountService{}
 
 			// Create a test logger that discards output
 			testLogger := log.New(io.Discard, "", 0)
@@ -111,4 +115,23 @@ func setupTestRequest(method, path string, body interface{}) (*httptest.Response
 	rec := httptest.NewRecorder()
 
 	return rec, req
+}
+
+// MockAccountService is a mock implementation of service.AccountService
+type MockAccountService struct{}
+
+// CreateAccount implements the AccountService interface for testing
+func (m *MockAccountService) CreateAccount(ctx context.Context, handle syntax.Handle, email, password string) (*model.Account, error) {
+	// For testing, return a mock account or error based on the input
+	if handle == "" {
+		return nil, fmt.Errorf("handle cannot be empty")
+	}
+
+	// Mock successful account creation
+	return &model.Account{
+		DID:       syntax.DID(fmt.Sprintf("did:plc:%s", handle)),
+		Handle:    handle,
+		Email:     email,
+		CreatedAt: time.Now().UTC(),
+	}, nil
 }

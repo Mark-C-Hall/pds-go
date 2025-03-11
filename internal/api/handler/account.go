@@ -32,7 +32,7 @@ type CreateAccountRequest struct {
 	VerficationPhone string        `json:"verficationPhone,omitempty"`
 	Password         string        `json:"password"`
 	RecoveryKey      string        `json:"recoveryKey,omitempty"`
-	PLCOperation     struct{}      `json:"plcOp,omitempty"` // Todo: Figure this out
+	PLCOperation     struct{}      `json:"plcOp"` // Todo: Figure this out
 }
 
 type CreateAccountResponse struct {
