@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/bluesky-social/indigo/atproto/syntax"
-	"github.com/mark-c-hall/pds-go/internal/core/model"
+	"github.com/mark-c-hall/pds-go/internal/model"
 	"github.com/mark-c-hall/pds-go/internal/repository"
 	"github.com/mark-c-hall/pds-go/internal/util"
 )

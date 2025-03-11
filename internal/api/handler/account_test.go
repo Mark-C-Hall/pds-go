@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"github.com/bluesky-social/indigo/atproto/syntax"
-	"github.com/mark-c-hall/pds-go/internal/api/httputil"
-	"github.com/mark-c-hall/pds-go/internal/core/model"
+	"github.com/mark-c-hall/pds-go/internal/api/util"
+	"github.com/mark-c-hall/pds-go/internal/model"
 )
 
 func TestHandleCreateAccount(t *testing.T) {
@@ -86,7 +86,7 @@ func TestHandleCreateAccount(t *testing.T) {
 
 			// Verify error message if applicable
 			if tt.expectedError != "" {
-				var errorResp httputil.ErrorResponse
+				var errorResp util.ErrorResponse
 				if err := json.NewDecoder(rec.Body).Decode(&errorResp); err != nil {
 					t.Fatalf("Failed to decode error response: %v", err)
 				}

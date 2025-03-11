@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/mark-c-hall/pds-go/internal/core/model"
+	"github.com/mark-c-hall/pds-go/internal/model"
 )
 
 type AccountRepository interface {

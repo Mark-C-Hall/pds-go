@@ -8,7 +8,7 @@ import (
 	"github.com/bluesky-social/indigo/atproto/identity"
 	"github.com/bluesky-social/indigo/atproto/syntax"
 
-	"github.com/mark-c-hall/pds-go/internal/api/httputil"
+	"github.com/mark-c-hall/pds-go/internal/api/util"
 	"github.com/mark-c-hall/pds-go/internal/service"
 )
 
@@ -47,29 +47,29 @@ func (h *AccountHandler) HandleCreateAccount(w http.ResponseWriter, r *http.Requ
 	var req CreateAccountRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil { // TODO: Handle syntax errors
 		h.logger.Printf("Failed to decode request: %v", err)
-		httputil.RespondWithError(w, "InvalidRequest", "Invalid JSON body", http.StatusBadRequest)
+		util.RespondWithError(w, "InvalidRequest", "Invalid JSON body", http.StatusBadRequest)
 		return
 	}
 
 	if req.Handle == "" {
-		httputil.RespondWithError(w, "InvalidRequest", "Handle is required", http.StatusBadRequest)
+		util.RespondWithError(w, "InvalidRequest", "Handle is required", http.StatusBadRequest)
 		return
 	}
 
 	if req.Email == "" {
-		httputil.RespondWithError(w, "InvalidRequest", "Email is required", http.StatusBadRequest)
+		util.RespondWithError(w, "InvalidRequest", "Email is required", http.StatusBadRequest)
 		return
 	}
 
 	if req.Password == "" {
-		httputil.RespondWithError(w, "InvalidRequest", "Password is required", http.StatusBadRequest)
+		util.RespondWithError(w, "InvalidRequest", "Password is required", http.StatusBadRequest)
 		return
 	}
 
 	account, err := h.service.CreateAccount(r.Context(), req.Handle, req.Email, req.Password)
 	if err != nil {
 		h.logger.Printf("Failed to create account: %v", err)
-		httputil.RespondWithError(w, "InternalError", "Failed to create account", http.StatusInternalServerError)
+		util.RespondWithError(w, "InternalError", "Failed to create account", http.StatusInternalServerError)
 		return
 	}
 
@@ -79,5 +79,5 @@ func (h *AccountHandler) HandleCreateAccount(w http.ResponseWriter, r *http.Requ
 	}
 
 	h.logger.Printf("Created account for %s with DID %s", account.Handle, account.DID)
-	httputil.RespondWithJSON(w, &resp, http.StatusOK)
+	util.RespondWithJSON(w, &resp, http.StatusOK)
 }
