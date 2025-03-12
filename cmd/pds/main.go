@@ -19,7 +19,14 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "PDS: ", log.LstdFlags)
 
-	db, err := repository.SetupDatabase("./pds.db")
+	// Get database connection string from environment
+	dbConnStr := os.Getenv("DB_CONNECTION_STRING")
+	if dbConnStr == "" {
+		dbConnStr = "postgres://postgres:password@localhost:5432/pds?sslmode=disable"
+	}
+
+	// Setup database
+	db, err := repository.SetupDatabase(dbConnStr)
 	if err != nil {
 		logger.Fatalf("Failed to setup database: %v", err)
 	}

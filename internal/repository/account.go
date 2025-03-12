@@ -23,7 +23,7 @@ func NewSQLAccountRepository(db *sql.DB) AccountRepository {
 func (r *SQLAccountRepository) CreateAccount(ctx context.Context, account *model.Account, hashedPassword string) error {
 	query := `
 		INSERT INTO accounts (did, handle, email, password_hash, created_at)
-		VALUES (?, ?, ?, ?, ?)
+		VALUES ($1, $2, $3, $4, $5)
 	`
 
 	_, err := r.db.ExecContext(ctx, query,

@@ -4,13 +4,13 @@ package repository
 import (
 	"database/sql"
 
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	_ "github.com/lib/pq" // Postgres driver
 )
 
 // SetupDatabase initializes the database connection and schema
 func SetupDatabase(dbPath string) (*sql.DB, error) {
 	// Open database connection
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("postgres", dbPath)
 	if err != nil {
 		return nil, err
 	}
