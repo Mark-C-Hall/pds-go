@@ -1,34 +1,34 @@
-// internal/repository/db.go
 package repository
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/lib/pq" // Postgres driver
+	"github.com/mark-c-hall/pds-go/internal/config"
 )
 
-// SetupDatabase initializes the database connection and schema
-func SetupDatabase(dbPath string) (*sql.DB, error) {
-	// Open database connection
-	db, err := sql.Open("postgres", dbPath)
+func SetupDatabase(cfg *config.Config) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.Database.ConnectionString)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to open database connection: %w", err)
 	}
 
-	// Check connection
 	if err := db.Ping(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
-	// Create tables if they don't exist
 	if err := createTables(db); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create tables: %w", err)
 	}
+
+	db.SetMaxOpenConns(cfg.Database.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.Database.MaxIdleConns)
+	db.SetConnMaxLifetime(cfg.Database.ConnMaxLifetime)
 
 	return db, nil
 }
 
-// createTables sets up the database schema
 func createTables(db *sql.DB) error {
 	// Accounts table
 	accountsSchema := `
@@ -46,8 +46,6 @@ func createTables(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-
-	// Add other tables as needed
 
 	return nil
 }

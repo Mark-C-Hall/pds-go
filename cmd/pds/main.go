@@ -7,10 +7,10 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	"github.com/mark-c-hall/pds-go/internal/api/handler"
 	"github.com/mark-c-hall/pds-go/internal/api/router"
+	"github.com/mark-c-hall/pds-go/internal/config"
 	"github.com/mark-c-hall/pds-go/internal/repository"
 	"github.com/mark-c-hall/pds-go/internal/service"
 	"github.com/mark-c-hall/pds-go/internal/util"
@@ -19,14 +19,13 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "PDS: ", log.LstdFlags)
 
-	// Get database connection string from environment
-	dbConnStr := os.Getenv("DB_CONNECTION_STRING")
-	if dbConnStr == "" {
-		dbConnStr = "postgres://postgres:password@localhost:5432/pds?sslmode=disable"
+	cfg, err := config.Load()
+	if err != nil {
+		logger.Fatalf("Configuration err: %v", err)
 	}
 
 	// Setup database
-	db, err := repository.SetupDatabase(dbConnStr)
+	db, err := repository.SetupDatabase(cfg)
 	if err != nil {
 		logger.Fatalf("Failed to setup database: %v", err)
 	}
@@ -39,12 +38,15 @@ func main() {
 	router := router.SetupRouter(accountHandler)
 
 	server := http.Server{
-		Addr:    ":8080",
-		Handler: router,
+		Addr:         cfg.Server.Port,
+		Handler:      router,
+		ReadTimeout:  cfg.Server.ReadTimeout,
+		WriteTimeout: cfg.Server.WriteTimeout,
+		IdleTimeout:  cfg.Server.IdleTimeout,
 	}
 
 	go func() {
-		logger.Println("Starting server on :8080")
+		logger.Printf("Starting server on %s\n", cfg.Server.Port)
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			logger.Fatalf("Server error: %v", err)
 		}
@@ -56,7 +58,7 @@ func main() {
 	<-quit
 	logger.Println("Shutdown signal received, initiating graceful shutdown...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Server.IdleTimeout)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
