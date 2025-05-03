@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+
+# Go build files
+/bin
+/pkg
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Go test files
+*_test.go
+*.test
+coverage.*
+
+# Log files
+*.log
+
+# Temporary files
+/tmp
+.tmp
+*.tmp
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Local environment variables
+.env
+.env.local
+
+# Docker files
+dockerfile
+compose.yml
+.dockerignore
+
+# Project specific files you don't need in the container
+README.md
+LICENSE
+CONTRIBUTING.md
+docs/
+scripts/
