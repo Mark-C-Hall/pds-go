@@ -32,7 +32,7 @@ go mod tidy
 ### Running the Server
 
 ```bash
-go run cmd/pds-server/main.go
+go run cmd/pds/main.go
 ```
 
 ## Development Status
