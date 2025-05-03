@@ -5,3 +5,7 @@ services:
       dockerfile: dockerfile
     ports:
       - "8080:8080"
+    develop:
+      watch:
+        - action: rebuild
+          path: .
