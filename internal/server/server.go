@@ -1,19 +1,17 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
-	"github.com/mark-c-hall/pds-go/internal/handlers"
+	"github.com/mark-c-hall/pds-go/internal/config"
 )
 
-func NewServer() *http.Server {
-	mux := &http.ServeMux{}
-	mux.HandleFunc("/", handlers.CreateAccountHandler)
+func NewServer(cfg *config.Config, handler *http.ServeMux) *http.Server {
+	addr := fmt.Sprintf("%s:%s", cfg.Server.Host, cfg.Server.Port)
 
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: mux,
+	return &http.Server{
+		Addr:    addr,
+		Handler: handler,
 	}
-
-	return srv
 }
