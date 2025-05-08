@@ -2,8 +2,13 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/mark-c-hall/pds-go/internal/config"
 	"github.com/mark-c-hall/pds-go/internal/handlers"
@@ -39,6 +44,39 @@ func main() {
 	// Create and start the server
 	srv := server.NewServer(cfg, mainRouter)
 
-	log.Printf("Server starting on %s:%s\n", cfg.Server.Host, cfg.Server.Port)
-	log.Fatal(srv.ListenAndServe())
+	// Create a channel to listen for server errors
+	serverErrors := make(chan error, 1)
+
+	// Run server in a go routine
+	go func() {
+		log.Printf("Server starting on %s:%s\n", cfg.Server.Host, cfg.Server.Port)
+		serverErrors <- srv.ListenAndServe()
+	}()
+
+	// Create a channel to listen for signals
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
+	// Block until an os signal or error is reached
+	select {
+	case err := <-serverErrors:
+		log.Fatalf("Error with server: %v\n", err)
+
+	case sig := <-shutdown:
+		log.Printf("Shutdown signal received: %v\n", sig)
+
+		// Create a deadline for graceful shutdown
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
+
+		// Attempt graceful shutdown
+		if err := srv.Shutdown(ctx); err != nil {
+			log.Printf("Graceful shutdown failed: %v", err)
+			if err := srv.Close(); err != nil {
+				log.Printf("Forced shutdown failed: %v", err)
+			}
+		}
+
+		log.Println("Server shutdown complete")
+	}
 }
