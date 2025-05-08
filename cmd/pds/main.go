@@ -22,6 +22,17 @@ func main() {
 		log.Fatalf("Error loading config: %v\n", err)
 	}
 
+	// Call run and handle potential error
+	if err := run(cfg); err != nil {
+		log.Fatalf("Application error: %v\n", err)
+	}
+}
+
+func run(cfg *config.Config) error {
+	// Initialize context that will be used for graceful shutdown
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
 	// Create routers
 	mainRouter := http.NewServeMux()
 	atprotoRouter := http.NewServeMux()
@@ -44,8 +55,9 @@ func main() {
 	// Create and start the server
 	srv := server.NewServer(cfg, mainRouter)
 
-	// Create a channel to listen for server errors
+	// Create error channels for monitoring server lifecycle
 	serverErrors := make(chan error, 1)
+	shutdownComplete := make(chan struct{})
 
 	// Run server in a go routine
 	go func() {
@@ -53,24 +65,18 @@ func main() {
 		serverErrors <- srv.ListenAndServe()
 	}()
 
-	// Create a channel to listen for signals
-	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
-
-	// Block until an os signal or error is reached
-	select {
-	case err := <-serverErrors:
-		log.Fatalf("Error with server: %v\n", err)
-
-	case sig := <-shutdown:
-		log.Printf("Shutdown signal received: %v\n", sig)
+	// Start a goroutine to handle graceful shutdown
+	go func() {
+		// Wait for context cancellation (triggered by signal)
+		<-ctx.Done()
+		log.Println("Shutdown signal received")
 
 		// Create a deadline for graceful shutdown
-		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 		defer cancel()
 
 		// Attempt graceful shutdown
-		if err := srv.Shutdown(ctx); err != nil {
+		if err := srv.Shutdown(shutdownCtx); err != nil {
 			log.Printf("Graceful shutdown failed: %v", err)
 			if err := srv.Close(); err != nil {
 				log.Printf("Forced shutdown failed: %v", err)
@@ -78,5 +84,18 @@ func main() {
 		}
 
 		log.Println("Server shutdown complete")
+		close(shutdownComplete)
+	}()
+
+	// Wait for either server error or complete shutdown
+	select {
+	case err := <-serverErrors:
+		if err != http.ErrServerClosed {
+			return err
+		}
+	case <-shutdownComplete:
+		// Shutdown completed successfully
 	}
+
+	return nil
 }
